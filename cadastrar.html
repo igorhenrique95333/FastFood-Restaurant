@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro</title>
+    <link rel="stylesheet" href="css/cadastrar.css">
+    <link rel="icon" href="images/Favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/login.css">
+    <script>
+        async function verificarCampos(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            
+            // Obtendo os valores dos campos do formulário
+            const nome = document.getElementById('nome').value;
+            const endereco = document.getElementById('endereco').value;
+            const telefone = document.getElementById('telefone').value;
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            const confirmarSenha = document.getElementById('confirmar_senha').value;
+            
+            if (senha !== confirmarSenha) {
+                alert('As senhas não coincidem!');
+                return false;
+            }
+            
+            // Dados que serão enviados
+            const data = {
+                name: nome,
+                endereco: endereco,
+                telefone: telefone,
+                email: email,
+                password: senha,
+                type: 'Cliente' // Adicione outros campos necessários aqui
+            };
+            
+            try {
+                const response = await fetch('http://localhost:40001/user/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+
+                const result = await response.json();
+                alert('Usuário cadastrado com sucesso!');
+                console.log(result);
+                window.open('index.html');
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar o usuário');
+            }
+        }
+    </script>
+</head>
+<body style="background-image:url(images/plano_de_fundo_cadastrar.png);">
+    <header style="width: 100%;  background-color:#FFC449;height: auto;">
+        <div>
+          <nav>
+            <img src="images/Logo.png" alt="Logo" class="logo">
+            <a href="login.html" id="loginLink" class="login">Login</a>
+          </nav>
+        </div>
+      </header>
+    <div class="container" >
+        <h2 style="color: white;">Cadastro de Usuário</h2>
+        <form onsubmit="verificarCampos(event)">
+            <div class="form-group">
+                <label for="nome">Nome:</label>
+                <input type="text" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="endereco">Endereço:</label>
+                <input type="text" id="endereco" name="endereco" required>
+            </div>
+            <div class="form-group">
+                <label for="telefone">Telefone:</label>
+                <input type="tel" id="telefone" name="telefone" required>
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmar_senha">Confirmar Senha:</label>
+                <input type="password" id="confirmar_senha" name="confirmar_senha" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn cadastrar">Cadastrar</button>
+            </div>
+        </form>
+    </div>
+    <div id="openModal" class="modalDialog">
+        <div>
+            <a href="index.html" title="Close" class="close">X</a>
+            <h2>Cadastro feito com Sucesso!</h2>
+            <p>Obrigado por fazer cadastro em nosso restaurante</p>
+        </div>
+    </div>
+</body>
+</html>

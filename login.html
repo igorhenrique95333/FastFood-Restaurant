@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="icon" href="images/Favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="css/login.css">
+
+  <script>
+    async function verificarCampos2(event) {
+
+      event.preventDefault(); // Impede o envio padrão do formulário
+
+      // Obtendo os valores dos campos do formulário
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      const data = {
+        email: email,
+        password: senha
+      };
+
+      try {
+        const response = await fetch('http://localhost:40001/user/signin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          alert(`Erro: E-mail ou senha incorretos`);
+          return false;
+        }
+
+        const result = await response.json();
+        console.log(result);
+        if(result.tipo == "Cliente"){
+          window.open('index.html');
+        }
+        else if(result.tipo == "admin"){
+          window.open('index_admin.html');
+        }
+      
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao realizar o login');
+      }
+
+      function verificarCampos() {
+        var nome = document.getElementById('username').value;
+        var senha = document.getElementById('password').value;
+
+        if (nome === '' || senha === '') {
+          alert('Por favor, preencha todos os campos.');
+          return;
+        }
+      }
+    }
+
+  </script>
+</head>
+<body>
+  <header style="width: 100%;  background-color:#FFC449;height: auto;">
+    <div>
+      <nav>
+        <img src="images/Logo.png" alt="Logo" class="logo">
+        <a href="#Login" id="loginLink" class="login">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="carousel" style="z-index: 2;">
+    <img class="slide" src="images/PlanoDeFundoLogin.jpg" alt="Imagem 1">
+    <img class="slide" src="images/plano_de_fundo_cadastrar.png" alt="Imagem 2">
+    <img class="slide" src="images/planodefundo3.jpg" alt="Imagem 3">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none">
+      <path class="elementor-shape-fill" opacity="0.33"
+        d="M473,67.3c-203.9,88.3-263.1-34-320.3,0C66,119.1,0,59.7,0,59.7V0h1000v59.7 c0,0-62.1,26.1-94.9,29.3c-32.8,3.3-62.8-12.3-75.8-22.1C806,49.6,745.3,8.7,694.9,4.7S492.4,59,473,67.3z">
+      </path>
+      <path class="elementor-shape-fill" opacity="0.66"
+        d="M734,67.3c-45.5,0-77.2-23.2-129.1-39.1c-28.6-8.7-150.3-10.1-254,39.1 s-91.7-34.4-149.2,0C115.7,118.3,0,39.8,0,39.8V0h1000v36.5c0,0-28.2-18.5-92.1-18.5C810.2,18.1,775.7,67.3,734,67.3z">
+      </path>
+      <path class="elementor-shape-fill"
+        d="M766.1,28.9c-200-57.5-266,65.5-395.1,19.5C242,1.8,242,5.4,184.8,20.6C128,35.8,132.3,44.9,89.9,52.5C28.6,63.7,0,0,0,0 h1000c0,0-9.9,40.9-83.6,48.1S829.6,47,766.1,28.9z">
+      </path>
+    </svg>
+  </div>
+
+  <div class="center">
+    <img src="images/Logo.png" alt="" style="padding-top: 95px;">
+  </div>
+
+
+  <div class="login-container" style="z-index: 1;" id="Login">
+    <h2 style="color: #ccc; font-size: 50px; margin-top: 20px;">Bem Vindo!</h2>
+    <form onsubmit="verificarCampos2(event)">
+      <div class="form-group">
+        <label for="email">E-mail:</label>
+        <input type="text" id="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="senha">Senha:</label>
+        <input type="text" id="senha" name="senha" required>
+      </div>
+      <a href="cadastrar.html" id="loginLink">Cadastrar-se</a>
+      <div class="form-group">
+        <button type="submit" class="btn login">Login</button>
+      </div>
+    </form>
+  </div>
+  <script>
+
+    let currentIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+
+    function showSlide(index) {
+      slides.forEach((slide, i) => {
+        if (i === index) {
+          slide.classList.remove('fade-out');
+        } else {
+          slide.classList.add('fade-out');
+        }
+      });
+    }
+
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % slides.length;
+      showSlide(currentIndex);
+    }
+
+    // Intervalo de mudança de slide
+    setInterval(nextSlide, 3000); // Mudança a cada 3 segundos
+  </script>
+</body>
+
+</html>

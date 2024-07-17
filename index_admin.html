@@ -115,6 +115,8 @@
         }
     </style>
     <script>
+
+
         async function PesquisaDisp(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
             const date = document.getElementById('data_pesquisa_disp').value;
@@ -124,30 +126,35 @@
             try {
                 document.getElementById('alldisponibilidade').innerHTML = " ";
                 disponibilidade.disponibilidade.forEach(disponib => {
-                    const option = document.createElement('tr');
-                    const disponHTML = `
-          
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
                 <td>${disponib.DateDisponivel}</td>
                 <td>${disponib.hora_inicio}</td>
                 <td>${disponib.hora_fim}</td>
                 <td>Mesa: ${disponib.mesaId}</td>
-        <td><button id="DeleteDisp" value="${disponib.id}" onclick="DeleteDisp(event)" style="width:100%">Deletar</button></td>
-        <td><button id="AlterarDisp" value="${disponib.id}" onclick="DeleteDisp(event)" style="width:100%">Alterar</button></td>
-                `;
-                    const selectBox = document.getElementById('alldisponibilidade');
-                    selectBox.innerHTML += disponHTML;
+                <td><button id="DeleteDisp" value="${disponib.id}" onclick="DeleteDisp(event)" style="width:100%">Deletar</button></td>
+                <td><button id="AlterarDisp" 
+                            data-disponib='${JSON.stringify(disponib)}' 
+                            onclick="showForm(event, 'form-disponibilidade-alterar')" 
+                            style="width:100%">Alterar</button></td>
+            `;
+                    document.getElementById('alldisponibilidade').appendChild(row);
+                    localStorage.setItem('idAlterarDisp', disponib.id);
                 });
             }
             catch (error) {
-                console.error('Error loading disponibilidade:', error);
+                console.error('Error loading disponibilidade:', error); ''
             }
+        }
+        async function CarregaDispAlt(event) {
+            alert("carrega dados");
         }
         async function DeleteDisp(event) {
             const Dispid = document.getElementById('DeleteDisp').value;
             var botao = document.getElementById("btnPesqDisp");
 
             const data = {
-              id:Dispid
+                id: Dispid
             };
 
             try {
@@ -292,7 +299,7 @@
 
         async function CreateUser(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
-            
+
             // Obtendo os valores dos campos do formulário
             const nome = document.getElementById('nome').value;
             const endereco = document.getElementById('endereco').value;
@@ -302,12 +309,12 @@
             const confirmarSenha = document.getElementById('confirmar_senha').value;
             const ClassUser = document.getElementById('classuser').value;
 
-            
+
             if (senha !== confirmarSenha) {
                 alert('As senhas não coincidem!');
                 return false;
             }
-            
+
             // Dados que serão enviados
             const data = {
                 name: nome,
@@ -317,7 +324,7 @@
                 password: senha,
                 type: ClassUser // Adicione outros campos necessários aqui
             };
-            
+
             try {
                 const response = await fetch('http://localhost:40001/user/signup', {
                     method: 'POST',
@@ -341,6 +348,48 @@
                 alert('Erro ao cadastrar o usuário');
             }
         }
+        async function AlterarDisp(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            const IdALterar = localStorage.getItem('idAlterarDisp');
+            var botao = document.getElementById("btnPesqDisp");
+
+            const NumMesa = document.getElementById('NumMesa_alterar_disp').value;
+            const Date = document.getElementById('data_alterar_disp').value;
+            const HoraInicio = document.getElementById('hora_inicio_alterar').value;
+            const HoraFim = document.getElementById('hora_fim_alterar').value;
+
+            const data = {
+                mesaId: NumMesa,
+                DateDisponivel: Date,
+                hora_inicio: HoraInicio,
+                hora_fim: HoraFim,
+            };
+
+            try {
+                alert(IdALterar);
+                const response = await fetch(`http://localhost:40001/disp/${IdALterar}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+
+                const result = await response.json();
+                alert('Disponibilidade alterada com sucesso!');
+                console.log(result);
+                botao.click();
+            }
+            catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao alterar disponibilidade');
+            }
+        }
     </script>
 </head>
 
@@ -350,31 +399,32 @@
         <div class="dropdown">
             <button class="dropbtn">Disponibilidade</button>
             <div class="dropdown-content">
-                <a href="#" onclick="showForm('form-disponibilidade-criar')">Criar</a>
-                <a href="#" onclick="showForm('form-disponibilidade-pesquisar')">Pesquisar</a>
+                <a href="#" onclick="showForm(event, 'form-disponibilidade-criar')">Criar</a>
+                <a href="#" onclick="showForm(event, 'form-disponibilidade-pesquisar')">Pesquisar</a>
             </div>
         </div>
         <div class="dropdown">
             <button class="dropbtn">Mesa</button>
             <div class="dropdown-content">
-                <a href="#" onclick="showForm('form-mesa-criar')">Criar</a>
-                <a href="#" onclick="showForm('form-mesa-pesquisar')">Pesquisar</a>
+                <a href="#" onclick="showForm(event, 'form-mesa-criar')">Criar</a>
+                <a href="#" onclick="showForm(event, 'form-mesa-pesquisar')">Pesquisar</a>
             </div>
         </div>
         <div class="dropdown">
             <button class="dropbtn">Prato</button>
             <div class="dropdown-content">
-                <a href="#" onclick="showForm('form-prato-criar')">Criar</a>
-                <a href="#" onclick="showForm('form-prato-pesquisar')">Pesquisar</a>
+                <a href="#" onclick="showForm(event,'form-prato-criar')">Criar</a>
+                <a href="#" onclick="showForm(event,'form-prato-pesquisar')">Pesquisar</a>
             </div>
         </div>
         <div class="dropdown">
             <button class="dropbtn">Usuários</button>
             <div class="dropdown-content">
-                <a href="#" onclick="showForm('form-usuario-criar')">Criar</a>
-                <a href="#" onclick="showForm('form-usuario-pesquisar')">Pesquisar</a>
+                <a href="#" onclick="showForm(event,'form-usuario-criar')">Criar</a>
+                <a href="#" onclick="showForm(event,'form-usuario-pesquisar')">Pesquisar</a>
             </div>
         </div>
+            <a href="login.html" id="loginLink" class="login">Login</a>
     </div>
 
     <div id="form-disponibilidade-criar" class="form-container">
@@ -404,8 +454,23 @@
         <table id="alldisponibilidade">
 
         </table>
+    </div>
 
-
+    <div id="form-disponibilidade-alterar" class="form-container">
+        <button class="btn-arrow" onclick="showForm('form-disponibilidade-pesquisar')"><span
+                class="arrow">&larr;</span></button>
+        <h2>Alterar Disponibilidade</h2>
+        <form onsubmit=" AlterarDisp(event)">
+            <label for="nome">Número da Mesa:</label><br>
+            <input type="text" id="NumMesa_alterar_disp" name="NumMesa_alterar_disp"><br>
+            <label for="data">Data:</label><br>
+            <input type="date" id="data_alterar_disp" name="data_alterar_disp" required><br>
+            <label for="nome">Hora de Inicio:</label><br>
+            <input type="text" id="hora_inicio_alterar" name="hora_inicio_alterar"><br>
+            <label for="nome">Hora de Encerramento:</label><br>
+            <input type="text" id="hora_fim_alterar" name="hora_fim_alterar"><br>
+            <button type="submit" class="btn cadastrar" id="btnPesqDisp">Alterar</button>
+        </form>
     </div>
 
     <div id="form-mesa-criar" class="form-container">
@@ -460,33 +525,33 @@
     <div id="form-usuario-criar" class="form-container">
         <h2>Criar Usuário</h2>
         <form onsubmit="CreateUser(event)">
-           
-                <label for="nome">Nome:</label><br>
-                <input type="text" id="nome" name="nome" required><br>
-           
-         
-                <label for="endereco">Endereço:</label><br>
-                <input type="text" id="endereco" name="endereco" required><br>
-         
-                <label for="telefone">Telefone:</label><br>
-                <input type="tel" id="telefone" name="telefone" required><br>
-         
-                <label for="email">E-mail:</label><br>
-                <input type="email" id="email" name="email" required><br>
-        
-                <label for="senha">Senha:</label><br>
-                <input type="password" id="senha" name="senha" required><br>
-          
-                <label for="confirmar_senha">Confirmar Senha:</label><br>
-                <input type="password" id="confirmar_senha" name="confirmar_senha" required><br>
 
-                <select name="select" id="classuser">
-                    <option value="admin">Administrador</option>
-                    <option value="Cliente">Cliente</option>
-                </select><br>
+            <label for="nome">Nome:</label><br>
+            <input type="text" id="nome" name="nome" required><br>
 
-                <button type="submit" class="btn cadastrar">Cadastrar</button>
-       
+
+            <label for="endereco">Endereço:</label><br>
+            <input type="text" id="endereco" name="endereco" required><br>
+
+            <label for="telefone">Telefone:</label><br>
+            <input type="tel" id="telefone" name="telefone" required><br>
+
+            <label for="email">E-mail:</label><br>
+            <input type="email" id="email" name="email" required><br>
+
+            <label for="senha">Senha:</label><br>
+            <input type="password" id="senha" name="senha" required><br>
+
+            <label for="confirmar_senha">Confirmar Senha:</label><br>
+            <input type="password" id="confirmar_senha" name="confirmar_senha" required><br>
+
+            <select name="select" id="classuser">
+                <option value="admin">Administrador</option>
+                <option value="Cliente">Cliente</option>
+            </select><br>
+
+            <button type="submit" class="btn cadastrar">Cadastrar</button>
+
         </form>
     </div>
 
@@ -518,17 +583,25 @@
     </div>
 
     <script>
-        function showForm(formId) {
+        function showForm(event, formId) {
             // Hide all forms
             var forms = document.querySelectorAll('.form-container');
             forms.forEach(function (form) {
                 form.classList.remove('active');
             });
-
             // Show the selected form
             var form = document.getElementById(formId);
             if (form) {
                 form.classList.add('active');
+            }
+
+            if (event.target.dataset) {
+                const disponibData = JSON.parse(event.target.dataset.disponib);
+
+                document.getElementById('data_alterar_disp').value = disponibData.DateDisponivel;
+                document.getElementById('hora_inicio_alterar').value = disponibData.hora_inicio;
+                document.getElementById('hora_fim_alterar').value = disponibData.hora_fim;
+                document.getElementById('NumMesa_alterar_disp').value = disponibData.mesaId;
             }
         }
     </script>

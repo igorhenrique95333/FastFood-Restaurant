@@ -6,6 +6,7 @@
   <script>
     async function loadItems() {
       try {
+        const EmailUser = localStorage.getItem('emailUser');
         const response = await fetch('http://localhost:40001/prato');
         const data = await response.json();
         const prato = data.pratos; // Array de pratos

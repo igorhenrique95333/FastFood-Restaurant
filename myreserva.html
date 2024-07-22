@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+   
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/login.css">
+    <title>Document</title>
+    <style>
+        .form-container {
+            padding: 20px;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+     <script>
+       
+         async function PesquisaMyRes(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            const IdUser = localStorage.getItem('UserId');
+            const date = document.getElementById('data_pesquisa_Reservas').value;
+            const response = await fetch(`http://localhost:40001/res/${date}/${IdUser}`);
+            const reserva = await response.json();
+            const { mesaId, Date } = reserva.info;
+            try {
+                document.getElementById('allreserva').innerHTML = " ";
+                reserva.info.forEach(reserv => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${reserv.Date}</td>
+                <td>Mesa: ${reserv.mesaId}</td>
+            `;
+                    document.getElementById('allreserva').appendChild(row);
+                    localStorage.setItem('idAlterarDisp', disponib.id);
+                });
+            }
+            catch (error) {
+                console.error('Error loading disponibilidade:', error); ''
+            }
+        }
+     </script>
+      
+</head>
+<body>
+    <header style="width: 100%;  background-color:#FFC449;height: auto;">
+        <div>
+          <nav>
+            <img src="images/Logo.png" alt="Logo" class="logo">
+            <a href="index.html" id="loginLink" class="login">Home</a>
+          </nav>
+        </div>
+      </header>
+    <div id="form-disponibilidade-pesquisar" class="form-container">
+        <h2>Pesquisar Minhas Reservas</h2>
+        <form onsubmit="PesquisaMyRes(event)">
+            <label for="data">Data:</label><br>
+            <input type="date" id="data_pesquisa_Reservas" name="data" required>
+            <button type="submit" class="btn cadastrar" id="btnPesqDisp">Pesquisar</button>
+        </form>
+        <h1>Lista de Reservas</h1>
+        <table id="allreserva">
+    
+        </table>
+    </div>
+</body>
+</html>

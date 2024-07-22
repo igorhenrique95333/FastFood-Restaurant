@@ -39,8 +39,9 @@
         const result = await response.json();
         console.log(result);
         if(result.tipo == "Cliente"){
+          localStorage.setItem('UserId',result.userId);
+          console.log(result.userId);
           window.open('index.html');
-          localStorage.setItem('emailUser',email );
         }
         else if(result.tipo == "admin"){
           window.open('index_admin.html');

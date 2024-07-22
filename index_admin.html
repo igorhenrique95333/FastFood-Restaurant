@@ -2,23 +2,6 @@
 <html lang="pt-BR">
 
 <head>
-    <script>
-        async function loadItems() {
-            const response = await fetch('http://localhost:40001/mesa');
-            const data = await response.json();
-            const tables = data.mesa; // Array de mesas
-
-            const selectBox = document.getElementById('tableSelect');
-
-            tables.forEach(table => {
-                const option = document.createElement('option');
-                option.value = table.id;
-                option.textContent = `Mesa ${table.id} - Capacidade: ${table.mesaCapact}`;
-                selectBox.appendChild(option);
-            });
-        }
-        window.onload = loadItems;
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Página de Gerenciamento</title>
@@ -115,7 +98,62 @@
         }
     </style>
     <script>
-
+          async function PesquisaPrato(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            const date = document.getElementById('classprato_pesq').value;
+            const response = await fetch(`http://localhost:40001/prato/${date}`);
+            const dados = await response.json();
+            const { pratoName, pratoValor,pratoClass } = dados.pratos;
+            try {
+                document.getElementById('allPrato').innerHTML = " ";
+                dados.pratos.forEach(prato => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>Mesa: ${prato.pratoName}</td>
+                <td>${prato.pratoValor}</td>
+                <td>${prato.pratoClass}</td>
+                <td><button id="DeletePr" value="${prato.id}" onclick="DeletePrato(event,this)" style="width:100%">Deletar</button></td>
+                <td><button id="AlterarPrato" 
+                            data-prato='${JSON.stringify(prato)}' 
+                            onclick="showForm(event, 'form-prato-alterar')" 
+                            style="width:100%">Alterar</button></td>
+            `;
+                    document.getElementById('allPrato').appendChild(row);
+                    localStorage.setItem('idAlterarPrato', prato.id);
+                });
+            }
+            catch (error) {
+                console.error('Error loading disponibilidade:', error); ''
+            }
+        }
+        async function PesquisaReserva(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            const date = document.getElementById('pesquisa-res-data').value;
+            const response = await fetch(`http://localhost:40001/res/${date}`);
+            const dados = await response.json();
+            const { mesaId, Date, HorarioReservado } = dados.info;
+            try {
+                document.getElementById('allRes').innerHTML = " ";
+                dados.info.forEach(reserva => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>Mesa: ${reserva.mesaId}</td>
+                <td>${reserva.Date}</td>
+                <td>${reserva.HorarioReservado}</td>
+                <td><button id="DeleteRes" value="${reserva.id}" onclick="DeleteRes(event)" style="width:100%">Deletar</button></td>
+                <td><button id="AlterarDisp" 
+                            data-reserva='${JSON.stringify(reserva)}' 
+                            onclick="showForm(event, 'form-reserva-alterar')" 
+                            style="width:100%">Alterar</button></td>
+            `;
+                    document.getElementById('allRes').appendChild(row);
+                    localStorage.setItem('idAlterarRes', reserva.id);
+                });
+            }
+            catch (error) {
+                console.error('Error loading disponibilidade:', error); ''
+            }
+        }
 
         async function PesquisaDisp(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
@@ -146,9 +184,7 @@
                 console.error('Error loading disponibilidade:', error); ''
             }
         }
-        async function CarregaDispAlt(event) {
-            alert("carrega dados");
-        }
+
         async function DeleteDisp(event) {
             const Dispid = document.getElementById('DeleteDisp').value;
             var botao = document.getElementById("btnPesqDisp");
@@ -182,6 +218,130 @@
             }
         }
 
+        async function DeleteRes(event) {
+            const IdRes = document.getElementById('DeleteRes').value;
+            var botao = document.getElementById("btn_pesquisa_res");
+            console.log(IdRes);
+            const data = {
+                id: IdRes
+            };
+            try {
+                const response = await fetch('http://localhost:40001/res/del', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+
+                const result = await response.json();
+                alert('Disponibilidade Deletada com sucesso!');
+                botao.click();
+                console.log(result);
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao deletar a disponibilidade');
+            }
+        }
+        async function DeletePrato(event,value) {
+            IdPrato = value.value;
+            var botao = document.getElementById("btn_pesquisa_res");
+          
+            const data = {
+                id: IdPrato
+            };
+            try {
+                const response = await fetch('http://localhost:40001/prato', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+
+                const result = await response.json();
+                alert('Prato Deletado com sucesso!');
+                botao.click();
+                console.log(result);
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao deletar prato');
+            }
+        }
+        async function InsertReserva(event) {
+
+            event.preventDefault(); // Impede o envio padrão do formulário
+            // Obtendo os valores dos campos do formulário
+            const email = document.getElementById('cria-res-email').value;
+            const date = document.getElementById('cria-res-data').value;
+            const HoraReservada = document.getElementById('cria-res-horario').value;
+            const NumMesa = document.getElementById('tableSelectRes').value;
+
+            const data = {
+                mesaId: NumMesa,
+                email: email,
+                date: date,
+                horarioReserv: HoraReservada
+            };
+
+            try {
+                const response = await fetch('http://localhost:40001/res/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.log(data)
+                    alert(`Erro: Erro ao realizar Reserva`);
+                    return false;
+                }
+
+                const result = await response.json();
+                alert('Reserva realizada com sucesso!');
+                console.log(result);
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao realizar o reserva');
+            }
+        }
+
+        async function loadItems() {
+            try {
+                const response = await fetch('http://localhost:40001/mesa');
+                const data = await response.json();
+                const tables = data.mesa; // Array de mesas
+
+                const selectBox = document.getElementById('tableSelect');
+                const selectBoxRes = document.getElementById('tableSelectRes');
+
+                tables.forEach(table => {
+                    const option = document.createElement('option');
+                    option.value = table.id;
+                    option.textContent = `Mesa ${table.id} - Capacidade: ${table.mesaCapact}`;
+                    selectBox.appendChild(option);
+                    selectBoxRes.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading tables:', error);
+            }
+        }
+        window.onload = loadItems;
         async function CreateDisp(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
 
@@ -220,6 +380,42 @@
             } catch (error) {
                 console.error('Erro:', error);
                 alert('Erro ao cadastrar o disponibilidade');
+            }
+        }
+        async function CreateReserva(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+
+            // Obtendo os valores dos campos do formulário
+            const NumMesa = document.getElementById('NumMesa_cria_res').value;
+            const EmailUser = document.getElementById('EmailUsuario_cria_res').value;
+            const Date = document.getElementById('data_criar_res').value;
+
+            // Dados que serão enviados
+            const data = {
+                mesaCapact: CapactMesa
+            };
+
+            try {
+                const response = await fetch('http://localhost:40001/mesa/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+
+                const result = await response.json();
+                alert('Mesa cadastrada com sucesso!');
+                console.log(result);
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar o mesa');
             }
         }
         async function CreateMesa(event) {
@@ -390,6 +586,89 @@
                 alert('Erro ao alterar disponibilidade');
             }
         }
+
+        async function AlterarRes(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            const IdALterar = localStorage.getItem('idAlterarRes');
+            var botao = document.getElementById("btn_pesquisa_res");
+
+            const Date = document.getElementById('alt-res-data').value;
+            const Mesa = document.getElementById('alt-res-mesa').value;
+            const Horario = document.getElementById('alt-res-horario').value;
+
+
+            const data = {
+                mesaId: Mesa,
+                date: Date,
+                HorarioReservado: Horario
+            };
+
+            try {
+                const response = await fetch(`http://localhost:40001/res/${IdALterar}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+
+                const result = await response.json();
+                alert('Reserva alterada com sucesso!');
+                console.log(result);
+                botao.click();
+            }
+            catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao alterar reserva');
+            }
+        }
+
+        async function AlterarPrato(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            var botao = document.getElementById("btn_pesquisa_prato");
+            const IdALterar = localStorage.getItem('idAlterarPrato');
+            
+            const Pratoid = document.getElementById('id_prato_alt').value;
+            console.log(Pratoid);
+            const PratoName = document.getElementById('nome_prato_alt').value;
+            const PratoValor = document.getElementById('valor_prato_alt').value;
+            const DescPrato= document.getElementById('Des_prato_alt').value;
+            const PratoClass= document.getElementById('classprato_alt').value;
+
+            const data = {
+                pratoName: PratoName,
+                pratoValor: PratoValor,
+                pratoDesc: DescPrato,
+                pratoClass: PratoClass
+            };
+
+            try {
+                const response = await fetch(`http://localhost:40001/prato/update/${Pratoid}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+                const result = await response.json();
+                alert('Prato alterado com sucesso!');
+                console.log(result);
+            }
+            catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao alterar prato');
+            }
+        }
     </script>
 </head>
 
@@ -424,7 +703,14 @@
                 <a href="#" onclick="showForm(event,'form-usuario-pesquisar')">Pesquisar</a>
             </div>
         </div>
-            <a href="login.html" id="loginLink" class="login">Login</a>
+        <div class="dropdown">
+            <button class="dropbtn">Reservas</button>
+            <div class="dropdown-content">
+                <a href="#" onclick="showForm(event,'form-reserva-criar')">Criar</a>
+                <a href="#" onclick="showForm(event,'form-reserva-pesquisar')">Pesquisar</a>
+            </div>
+        </div>
+        <a href="login.html" id="loginLink" class="login">Login</a>
     </div>
 
     <div id="form-disponibilidade-criar" class="form-container">
@@ -457,7 +743,7 @@
     </div>
 
     <div id="form-disponibilidade-alterar" class="form-container">
-        <button class="btn-arrow" onclick="showForm('form-disponibilidade-pesquisar')"><span
+        <button class="btn-arrow" onclick="showForm(event,'form-disponibilidade-pesquisar')"><span
                 class="arrow">&larr;</span></button>
         <h2>Alterar Disponibilidade</h2>
         <form onsubmit=" AlterarDisp(event)">
@@ -515,10 +801,45 @@
 
     <div id="form-prato-pesquisar" class="form-container">
         <h2>Pesquisar Prato</h2>
-        <form>
+        <form onsubmit="PesquisaPrato(event)">
             <label for="prato">Prato:</label><br>
-            <input type="text" id="prato" name="prato"><br>
-            <input type="submit" value="Enviar">
+            <select name="select" id="classprato_pesq">
+                <option value="">Select a Time</option>
+                <option value="Aperitivos">Aperitivos</option>
+                <option value="Blends Artesanais">Blends Artesanais</option>
+                <option value="Acompanhamentos">Acompanhamentos</option>
+                <option value="Especiais">Especiais</option>
+                <option value="Bebidas">Bebidas</option>
+            </select><br>
+            <button type="submit" class="btn cadastrar" id="btn_pesquisa_prato">Pesquisar</button>
+        </form>
+        <h1>Lista de Reserva</h1>
+        <table id="allPrato">
+
+        </table>
+    </div>
+
+    <div id="form-prato-alterar" class="form-container">
+        <button class="btn-arrow" onclick="showForm(event,'form-prato-pesquisar')"><span
+            class="arrow">&larr;</span></button>
+        <h2>Alterar Prato</h2>
+        <form onsubmit="AlterarPrato(event)">
+            <input type="hidden" id="id_prato_alt" name="usuario" readonly><br>
+            <label for="usuario">Nome do Prato:</label><br>
+            <input type="text" id="nome_prato_alt" name="usuario"><br>
+            <label for="usuario">Valor do Prato:</label><br>
+            <input type="text" id="valor_prato_alt" name="usuario"><br>
+            <select name="select" id="classprato_alt">
+                <option value="">Select a Time</option>
+                <option value="Aperitivos">Aperitivos</option>
+                <option value="Blends Artesanais">Blends Artesanais</option>
+                <option value="Acompanhamentos">Acompanhamentos</option>
+                <option value="Especiais">Especiais</option>
+                <option value="Bebidas">Bebidas</option>
+            </select><br>
+            <label for="usuario">Descrição do Prato:</label><br>
+            <textarea name=""  id="Des_prato_alt" cols="30" rows="5"></textarea>
+            <button type="submit" class="btn cadastrar" id="btn_pesquisa_prato">Alterar</button>
         </form>
     </div>
 
@@ -582,6 +903,66 @@
         </form>
     </div>
 
+    <div id="form-reserva-criar" class="form-container">
+        <h2>Criar Reserva</h2>
+        <form onsubmit="InsertReserva(event)">
+            <label for="email">E-mail:</label><br>
+            <input type="email" id="cria-res-email" name="email" required><br>
+
+            <label for="telefone">Telefone:</label><br>
+            <input type="tel" id="cria-res-telefone" name="telefone" required><br>
+
+            <label for="data">Data da Reserva:</label><br>
+            <input type="date" id="cria-res-data" name="data" required><br>
+
+            <label for="data">Número da Mesa:</label><br>
+            <select name="select" id="tableSelectRes">
+                <option value="">Select an item</option>
+            </select><br>
+
+            <label for="telefone">Horario:</label><br>
+            <input type="tel" id="cria-res-horario" name="telefone" required><br>
+
+            <div class="form-group">
+                <button type="submit" class="btn cadastrar" onclick="InsertReserva(event)">Cadastrar</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="form-reserva-pesquisar" class="form-container">
+        <h2>Pesquisar Reserva</h2>
+        <form onsubmit="PesquisaReserva(event)">
+            <label for="data">Data da Reserva:</label><br>
+            <input type="date" id="pesquisa-res-data" name="data" required><br>
+            <button type="submit" class="btn cadastrar" id="btn_pesquisa_res">Pesquisar</button>
+        </form>
+        <h1>Lista de Reserva</h1>
+        <table id="allRes">
+
+        </table>
+    </div>
+
+    <div id="form-reserva-alterar" class="form-container">
+        <button class="btn-arrow" onclick="showForm(event,'form-reserva-pesquisar')"><span
+                class="arrow">&larr;</span></button>
+        <h2>Alterar Reserva</h2>
+        <form onsubmit="AlterarRes(event)">
+
+            <label for="data">Data da Reserva:</label><br>
+            <input type="date" id="alt-res-data" name="data" required><br>
+
+            <label for="data">Número da Mesa:</label><br>
+            <input type="tel" id="alt-res-mesa" name="telefone" required><br>
+
+            <label for="telefone">Horario:</label><br>
+            <input type="tel" id="alt-res-horario" name="telefone" required><br>
+
+            <div class="form-group">
+                <button type="submit" class="btn cadastrar">Cadastrar</button>
+            </div>
+        </form>
+    </div>
+
     <script>
         function showForm(event, formId) {
             // Hide all forms
@@ -594,15 +975,32 @@
             if (form) {
                 form.classList.add('active');
             }
+            console.log(form);
 
-            if (event.target.dataset) {
+            if (form.id == "form-disponibilidade-alterar") {
                 const disponibData = JSON.parse(event.target.dataset.disponib);
-
+                console.log(disponibData);
                 document.getElementById('data_alterar_disp').value = disponibData.DateDisponivel;
                 document.getElementById('hora_inicio_alterar').value = disponibData.hora_inicio;
                 document.getElementById('hora_fim_alterar').value = disponibData.hora_fim;
                 document.getElementById('NumMesa_alterar_disp').value = disponibData.mesaId;
             }
+            if (form.id == "form-reserva-alterar") {
+                const ReservaData = JSON.parse(event.target.dataset.reserva);
+                console.log(ReservaData);
+                document.getElementById('alt-res-data').value = ReservaData.Date;
+                document.getElementById('alt-res-mesa').value = ReservaData.mesaId;
+                document.getElementById('alt-res-horario').value = ReservaData.HorarioReservado;
+            }
+            if (form.id == "form-prato-alterar") {
+                const PratoData = JSON.parse(event.target.dataset.prato);
+                document.getElementById('id_prato_alt').value = PratoData.id;
+                document.getElementById('nome_prato_alt').value = PratoData.pratoName;
+                document.getElementById('valor_prato_alt').value = PratoData.pratoValor;
+                document.getElementById('classprato_alt').value = PratoData.pratoClass;
+                document.getElementById('Des_prato_alt').value = PratoData.pratoDesc;
+            }
+
         }
     </script>
 

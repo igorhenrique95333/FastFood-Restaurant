@@ -98,12 +98,65 @@
         }
     </style>
     <script>
-          async function PesquisaPrato(event) {
+        async function PesquisaMesa(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            const idMesa = document.getElementById('tableSelectMesa').value;
+            try {
+                const response = await fetch(`http://localhost:40001/mesa/${idMesa}`);
+                const dados = await response.json();
+                const mesa = dados.mesa; // Assume que dados.mesa é um objeto único
+
+                document.getElementById('allMesa').innerHTML = " ";
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td>Mesa Número: ${mesa.id}</td>
+            <td>Capacidade: ${mesa.mesaCapact}</td>
+            <td><button id="DeleteMesas" value="${mesa.id}" onclick="DeleteMesa(event, this)" style="width:100%">Deletar</button></td>
+            <td><button id="AlterarMesa" 
+                        data-mesa='${JSON.stringify(mesa)}' 
+                        onclick="showForm(event, 'form-mesa-alterar')" 
+                        style="width:100%">Alterar</button></td>
+        `;
+                document.getElementById('allMesa').appendChild(row);
+                localStorage.setItem('idAlteraMesa', mesa.id);
+            } catch (error) {
+                console.error('Error loading disponibilidade:', error);
+            }
+        }
+        async function PesquisaUser(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            const email = document.getElementById('pesquisa_usuario_email').value;
+            const response = await fetch(`http://localhost:40001/user/${email}`);
+            const dados = await response.json();
+            const user = dados.user;
+            try {
+                document.getElementById('allUser').innerHTML = " ";
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td>${user.telefone}</td>
+                <td><button id="del_user_id" value="${user.id}" onclick="DeleteUser(event)" style="width:100%">Deletar</button></td>
+                <td><button id="AlterarPrato" 
+                            data-user='${JSON.stringify(user)}' 
+                            onclick="showForm(event, 'form-usuario-alterar')" 
+                            style="width:100%">Alterar</button></td>
+            `;
+                document.getElementById('allUser').appendChild(row);
+                localStorage.setItem('idAlterarUser', user.id);
+            }
+            catch (error) {
+                console.error('Error loading usuario:', error); ''
+            }
+
+        }
+        async function PesquisaPrato(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
             const date = document.getElementById('classprato_pesq').value;
             const response = await fetch(`http://localhost:40001/prato/${date}`);
             const dados = await response.json();
-            const { pratoName, pratoValor,pratoClass } = dados.pratos;
+            const { pratoName, pratoValor, pratoClass } = dados.pratos;
             try {
                 document.getElementById('allPrato').innerHTML = " ";
                 dados.pratos.forEach(prato => {
@@ -184,6 +237,69 @@
                 console.error('Error loading disponibilidade:', error); ''
             }
         }
+        async function DeleteUser(event) {
+            var botao = document.getElementById("btn_pesq_user");
+            var UserId = document.getElementById("del_user_id").value;
+            console.log(UserId);
+            const data = {
+                id: UserId
+            };
+            try {
+                const response = await fetch('http://localhost:40001/user', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+                const result = await response.json();
+                alert('Usuario Deletado com sucesso!');
+                botao.click();
+                console.log(result);
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao deletar Usuario');
+            }
+        }
+
+        async function DeleteMesa(event, value) {
+            IdMesa = value.value;
+            var botao = document.getElementById("btn_pesq_mesa");
+
+            const data = {
+                id: IdMesa
+            };
+            try {
+                const response = await fetch('http://localhost:40001/mesa', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+
+                const result = await response.json();
+                alert('Mesa Deletada com sucesso!');
+                botao.click();
+                console.log(result);
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao deletar Mesa');
+            }
+        }
+
 
         async function DeleteDisp(event) {
             const Dispid = document.getElementById('DeleteDisp').value;
@@ -249,10 +365,10 @@
                 alert('Erro ao deletar a disponibilidade');
             }
         }
-        async function DeletePrato(event,value) {
+        async function DeletePrato(event, value) {
             IdPrato = value.value;
             var botao = document.getElementById("btn_pesquisa_res");
-          
+
             const data = {
                 id: IdPrato
             };
@@ -329,13 +445,28 @@
 
                 const selectBox = document.getElementById('tableSelect');
                 const selectBoxRes = document.getElementById('tableSelectRes');
+                const selectBoxMesa = document.getElementById('tableSelectMesa');
+
 
                 tables.forEach(table => {
                     const option = document.createElement('option');
                     option.value = table.id;
                     option.textContent = `Mesa ${table.id} - Capacidade: ${table.mesaCapact}`;
                     selectBox.appendChild(option);
+                });
+
+                tables.forEach(table => {
+                    const option = document.createElement('option');
+                    option.value = table.id;
+                    option.textContent = `Mesa ${table.id} - Capacidade: ${table.mesaCapact}`;
                     selectBoxRes.appendChild(option);
+                });
+
+                tables.forEach(table => {
+                    const option = document.createElement('option');
+                    option.value = table.id;
+                    option.textContent = `Mesa ${table.id} - Capacidade: ${table.mesaCapact}`;
+                    selectBoxMesa.appendChild(option);
                 });
             } catch (error) {
                 console.error('Error loading tables:', error);
@@ -520,7 +651,7 @@
                 password: senha,
                 type: ClassUser // Adicione outros campos necessários aqui
             };
-
+            console.log(data);
             try {
                 const response = await fetch('http://localhost:40001/user/signup', {
                     method: 'POST',
@@ -632,13 +763,13 @@
             event.preventDefault(); // Impede o envio padrão do formulário
             var botao = document.getElementById("btn_pesquisa_prato");
             const IdALterar = localStorage.getItem('idAlterarPrato');
-            
+
             const Pratoid = document.getElementById('id_prato_alt').value;
             console.log(Pratoid);
             const PratoName = document.getElementById('nome_prato_alt').value;
             const PratoValor = document.getElementById('valor_prato_alt').value;
-            const DescPrato= document.getElementById('Des_prato_alt').value;
-            const PratoClass= document.getElementById('classprato_alt').value;
+            const DescPrato = document.getElementById('Des_prato_alt').value;
+            const PratoClass = document.getElementById('classprato_alt').value;
 
             const data = {
                 pratoName: PratoName,
@@ -667,6 +798,86 @@
             catch (error) {
                 console.error('Erro:', error);
                 alert('Erro ao alterar prato');
+            }
+        }
+
+        async function AlterarMesa(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            var botao = document.getElementById("btn_pesq_mesa");
+
+            const MesaId = document.getElementById('numero_alterar_mesa').value;
+
+            const MesaCapact = document.getElementById('capacidade_alterar_mesa').value;
+            console.log(MesaId);
+            console.log(MesaCapact);
+
+            const data = {
+                mesaCapact: MesaCapact,
+            };
+
+            try {
+                const response = await fetch(`http://localhost:40001/mesa/update/${MesaId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+                const result = await response.json();
+                alert('Mesa alterada com sucesso!');
+                console.log(result);
+            }
+            catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao alterar mesa');
+            }
+        }
+        async function AlterarUser(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            var botao = document.getElementById("btn_pesq_mesa");
+            
+            const IdALterar = localStorage.getItem('idAlterarUser');
+
+            const NameUser = document.getElementById('nome_alt_user').value
+            const EnderecUser = document.getElementById('endereco_alt_user').value
+            const FoneUser = document.getElementById('telefone_alt_user').value
+            const EmailUser = document.getElementById('email_alt_user').value
+            const SenhaUser = document.getElementById('senha_alt_user').value
+
+            console.log(IdALterar);
+            const data = {
+                name: NameUser,
+                email: EmailUser,
+                endereco: EnderecUser,
+                password: SenhaUser,
+                telefone: FoneUser,
+            };
+
+            try {
+                const response = await fetch(`http://localhost:40001/user/update/${IdALterar}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Erro: essa mensagem`);
+                    return false;
+                }
+                const result = await response.json();
+                alert('Usuario alterada com sucesso!');
+                console.log(result);
+            }
+            catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao alterar Usuario');
             }
         }
     </script>
@@ -755,7 +966,7 @@
             <input type="text" id="hora_inicio_alterar" name="hora_inicio_alterar"><br>
             <label for="nome">Hora de Encerramento:</label><br>
             <input type="text" id="hora_fim_alterar" name="hora_fim_alterar"><br>
-            <button type="submit" class="btn cadastrar" id="btnPesqDisp">Alterar</button>
+            <button type="submit" class="btn cadastrar" id="btnAltqDisp">Alterar</button>
         </form>
     </div>
 
@@ -770,10 +981,28 @@
 
     <div id="form-mesa-pesquisar" class="form-container">
         <h2>Pesquisar Mesa</h2>
-        <form>
-            <label for="mesa">Mesa:</label><br>
-            <input type="text" id="mesa" name="mesa"><br>
-            <input type="submit" value="Enviar">
+        <form onsubmit="PesquisaMesa(event)">
+            <label for="data">Número da Mesa:</label><br>
+            <select name="select" id="tableSelectMesa">
+            </select><br>
+            <button type="submit" class="btn cadastrar" id="btn_pesq_mesa">Pesquisar</button>
+        </form>
+        <h1>Lista de Mesas</h1>
+        <table id="allMesa">
+
+        </table>
+    </div>
+
+    <div id="form-mesa-alterar" class="form-container">
+        <button class="btn-arrow" onclick="showForm(event,'form-mesa-pesquisar')"><span
+                class="arrow">&larr;</span></button>
+        <h2>Alterar Mesa</h2>
+        <form onsubmit="AlterarMesa(event)">
+            <label for="nome">Número da Mesa:</label><br>
+            <input type="text" id="numero_alterar_mesa" name="NumMesa_alterar_disp" readonly><br>
+            <label for="nome">Capacidade da Mesa:</label><br>
+            <input type="text" id="capacidade_alterar_mesa" name="NumMesa_alterar_disp"><br>
+            <button type="submit" class="btn cadastrar" id="btnAltMesa">Alterar</button>
         </form>
     </div>
 
@@ -821,7 +1050,7 @@
 
     <div id="form-prato-alterar" class="form-container">
         <button class="btn-arrow" onclick="showForm(event,'form-prato-pesquisar')"><span
-            class="arrow">&larr;</span></button>
+                class="arrow">&larr;</span></button>
         <h2>Alterar Prato</h2>
         <form onsubmit="AlterarPrato(event)">
             <input type="hidden" id="id_prato_alt" name="usuario" readonly><br>
@@ -838,7 +1067,7 @@
                 <option value="Bebidas">Bebidas</option>
             </select><br>
             <label for="usuario">Descrição do Prato:</label><br>
-            <textarea name=""  id="Des_prato_alt" cols="30" rows="5"></textarea>
+            <textarea name="" id="Des_prato_alt" cols="30" rows="5"></textarea>
             <button type="submit" class="btn cadastrar" id="btn_pesquisa_prato">Alterar</button>
         </form>
     </div>
@@ -876,32 +1105,46 @@
         </form>
     </div>
 
-    <div id="form-usuario-alterar" class="form-container">
-        <h2>Alterar Usuário</h2>
-        <form>
-            <label for="usuario">Usuário:</label><br>
-            <input type="text" id="usuario" name="usuario"><br>
-            <input type="submit" value="Enviar">
-        </form>
-    </div>
-
-    <div id="form-usuario-deletar" class="form-container">
-        <h2>Deletar Usuário</h2>
-        <form>
-            <label for="usuario">Usuário:</label><br>
-            <input type="text" id="usuario" name="usuario"><br>
-            <input type="submit" value="Enviar">
-        </form>
-    </div>
 
     <div id="form-usuario-pesquisar" class="form-container">
         <h2>Pesquisar Usuário</h2>
-        <form>
-            <label for="usuario">Usuário:</label><br>
-            <input type="text" id="usuario" name="usuario"><br>
-            <input type="submit" value="Enviar">
+        <form onsubmit="PesquisaUser(event)">
+            <label for="usuario">Email do Usuário:</label><br>
+            <input type="text" id="pesquisa_usuario_email" name="pesquisa_usuario_email"><br>
+            <button type="submit" id="btn_pesq_user">Pesquisar</button>
+        </form>
+        <h1>Lista de Usuários</h1>
+        <table id="allUser">
+
+        </table>
+    </div>
+
+    <div id="form-usuario-alterar" class="form-container">
+        <button class="btn-arrow" onclick="showForm(event,'form-usuario-pesquisar')"><span
+            class="arrow">&larr;</span></button>
+        <h2>Alterar Usuário</h2>
+        <form onsubmit="AlterarUser(event)">
+
+            <label for="nome">Nome:</label><br>
+            <input type="text" id="nome_alt_user" name="nome" required><br>
+
+            <label for="endereco">Endereço:</label><br>
+            <input type="text" id="endereco_alt_user" name="endereco" required><br>
+
+            <label for="telefone">Telefone:</label><br>
+            <input type="tel" id="telefone_alt_user" name="telefone" required><br>
+
+            <label for="email">E-mail:</label><br>
+            <input type="email" id="email_alt_user" name="email" readonly><br>
+
+            <label for="senha">Senha:</label><br>
+            <input type="password" id="senha_alt_user" name="senha" required><br>
+
+            <button type="submit" class="btn cadastrar">Alterar</button>
+
         </form>
     </div>
+
 
     <div id="form-reserva-criar" class="form-container">
         <h2>Criar Reserva</h2>
@@ -964,6 +1207,7 @@
     </div>
 
     <script>
+
         function showForm(event, formId) {
             // Hide all forms
             var forms = document.querySelectorAll('.form-container');
@@ -1000,7 +1244,19 @@
                 document.getElementById('classprato_alt').value = PratoData.pratoClass;
                 document.getElementById('Des_prato_alt').value = PratoData.pratoDesc;
             }
-
+            if (form.id == "form-mesa-alterar") {
+                const MesaData = JSON.parse(event.target.dataset.mesa);
+                document.getElementById('numero_alterar_mesa').value = MesaData.id;
+                document.getElementById('capacidade_alterar_mesa').value = MesaData.mesaCapact;
+            }
+            if (form.id == "form-usuario-alterar") {
+                const UserData = JSON.parse(event.target.dataset.user);
+                document.getElementById('nome_alt_user').value = UserData.name;
+                document.getElementById('endereco_alt_user').value = UserData.endereco;
+                document.getElementById('telefone_alt_user').value = UserData.telefone;
+                document.getElementById('email_alt_user').value = UserData.email;
+                document.getElementById('senha_alt_user').value = UserData.password;
+            }
         }
     </script>
 
